@@ -9,14 +9,6 @@ fn findwords_parallel(
     bits_to_index: &HashMap<u32, usize>,
     index_to_word: &Vec<&[u8]>,
 ) -> usize {
-    struct StartInfo {
-        totalbits: u32,
-        numwords: usize,
-        words: [usize; 5],
-        max_letter: usize,
-        skipped: i32,
-    }
-
     let mut words: [usize; 5] = [0; 5];
 
     // let (sender1, receiver1) = crossbeam::channel::unbounded::<u32>();
@@ -61,8 +53,9 @@ fn findwords(
 
     // If we don't have 5 letters left there is not point going on
     let upper: usize = 26 - 5;
-
+    
     // walk over all letters in a certain order until we find an unused one
+    let mut print_str:String = String::new();
     for i in max_letter..upper {
         let m: u32 = lettermask[i];
         if totalbits & m != 0 {
@@ -102,7 +95,8 @@ fn findwords(
                 if let Some(last_index) = bits_to_index.get(&candidate) {
                     words[numwords] = *last_index;
 
-                    output(index_to_word, words);
+                    // output_old(index_to_word, words);
+                    output(index_to_word, words, &mut print_str);
                     numsolutions += 1
                 }
             } else {
@@ -115,7 +109,8 @@ fn findwords(
                     words[numwords] = idx;
 
                     if numwords == 4 {
-                        output(index_to_word, words);
+                        // output_old(index_to_word, words);
+                        output(index_to_word, words, &mut print_str);
                         numsolutions += 1
                     } else {
                         numsolutions += findwords(
@@ -133,17 +128,18 @@ fn findwords(
                 }
             }
         }
-
+        
         if skipped >= 0 {
             break;
         }
         skipped = i as i32;
     }
+    print!("{}", print_str);
 
     numsolutions
 }
 
-fn output(index_to_word: &Vec<&[u8]>, words: &[usize; 5]) -> () {
+fn output_old(index_to_word: &Vec<&[u8]>, words: &[usize; 5]) -> () {
     // return;
     let str = format!(
         "{} {} {} {} {}",
@@ -154,6 +150,19 @@ fn output(index_to_word: &Vec<&[u8]>, words: &[usize; 5]) -> () {
         unsafe { std::str::from_utf8_unchecked(index_to_word[words[4]]) }
     );
     println!("{}", str);
+}
+fn output(index_to_word: &Vec<&[u8]>, words: &[usize; 5],print_str:&mut String) -> () {
+    // return;
+    let str = format!(
+        "{} {} {} {} {}\n",
+        unsafe { std::str::from_utf8_unchecked(index_to_word[words[0]]) },
+        unsafe { std::str::from_utf8_unchecked(index_to_word[words[1]]) },
+        unsafe { std::str::from_utf8_unchecked(index_to_word[words[2]]) },
+        unsafe { std::str::from_utf8_unchecked(index_to_word[words[3]]) },
+        unsafe { std::str::from_utf8_unchecked(index_to_word[words[4]]) }
+    );
+    //Concate the string
+    print_str.push_str(&str);
 }
 
 fn main() {
